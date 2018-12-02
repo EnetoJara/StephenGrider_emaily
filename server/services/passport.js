@@ -6,19 +6,39 @@ const keys = require('../config/keys');
 
 const User = mongoose.model('users');
 
+// PassportJS serialisation
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser((id, done) => {
+  User.findById(id).then(user => {
+    done(null, user)
+  })
+});
+
 passport.use(
   // note: this strategy can be called as just 'google', see authRoutes.js
   new GoogleStrategy(
     {
+      // params sent in header
       clientID: keys.googleClientID,
       clientSecret: keys.googleClientSecret,
       callbackURL: '/auth/google/callback'
     },
     (accessToken, refreshToken, profile, done) => {
-      console.log('User ID:', profile.id);
-      new User({
-        googleID: profile.id
-      }).save();
+      // check if profile ID (googleID) is already assigned to a user.
+      User.findOne({ googleID: profile.id }).then ((existingUser) => {
+        if (existingUser) {
+          // already exists
+          done(null, existingUser);
+        } else {
+          //doesn't already exist
+          new User({ googleID: profile.id })
+            .save()
+            .then(user => done(null, user));
+        }
+      })
     }
   )
 );

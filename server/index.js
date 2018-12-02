@@ -1,5 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cookieSession = require('cookie-session');
+const passport = require('passport');
 const keys = require('./config/keys');
 
 // define User model for db with mongoose & authorisation strategy with PassportJS.
@@ -9,8 +11,18 @@ require('./services/passport');
 // simple database connection upon app startup using mongoose.
 mongoose.connect(keys.mongoURI);
 
-//define express app then start listening to authentication URLs via authRoutes.js
+//define express app + cookies
 const app = express();
+app.use(
+  cookieSession({
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    keys: [keys.cookieKey]
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+
+// start listening to authentication URLs via authRoutes.js
 require('./routes/authRoutes')(app);
 
 // use server port from .env file in production or default to 5000 for local dev.

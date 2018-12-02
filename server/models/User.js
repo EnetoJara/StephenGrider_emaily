@@ -8,5 +8,5 @@ const userScema = new Schema({
   googleID: String
 })
 
-// create the 'users' collection in db with the user scema
+// create the user model to be used for adding to/creating users collection in db
 mongoose.model('users', userScema);
